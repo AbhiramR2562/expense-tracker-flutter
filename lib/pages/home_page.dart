@@ -3,6 +3,7 @@ import 'package:expense_tracker/components/expense_summary.dart';
 import 'package:expense_tracker/components/expense_tile.dart';
 import 'package:expense_tracker/data/expense_data.dart';
 import 'package:expense_tracker/models/expense_item.dart';
+import 'package:expense_tracker/util/dialog_box.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -24,19 +25,34 @@ class _HomePageState extends State<HomePage> {
 
   // Save and Cancel Buttons
   void save() {
-    // Put the Doller & Cents togther
-    String amount =
-        '${newExpenseDollerController.text}.${newExpenseCentsController.text}';
+    if (newExpenseNameController.text.isNotEmpty &&
+        newExpenseDollerController.text.isNotEmpty) {
+      setState(() {
+        // Put the Doller & Cents togther
+        String amount =
+            '${newExpenseDollerController.text}.${newExpenseCentsController.text}';
 
-    // Create expense item
-    ExpenseItem newExpense = ExpenseItem(
-      name: newExpenseNameController.text,
-      amount: amount,
-      dateTime: DateTime.now(),
-    );
-    // add the new expense
-    Provider.of<ExpenseData>(context, listen: false).addNewExpense(newExpense);
-
+        // Create expense item
+        ExpenseItem newExpense = ExpenseItem(
+          name: newExpenseNameController.text,
+          amount: amount,
+          dateTime: DateTime.now(),
+        );
+        // add the new expense
+        Provider.of<ExpenseData>(context, listen: false)
+            .addNewExpense(newExpense);
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          content: Text(
+            'Unabel to add expense!',
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      );
+    }
     Navigator.pop(context);
     clear();
   }
@@ -68,54 +84,12 @@ class _HomePageState extends State<HomePage> {
   void addNewExpense() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add new expense'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Expense name
-            TextField(
-              controller: newExpenseNameController,
-              decoration: const InputDecoration(hintText: "Expense name"),
-            ),
-
-            // Expense amount
-            Row(
-              children: [
-                // dollers
-                Expanded(
-                  child: TextField(
-                    controller: newExpenseDollerController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(hintText: "Dollers"),
-                  ),
-                ),
-
-                //cents
-                Expanded(
-                  child: TextField(
-                    controller: newExpenseCentsController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(hintText: "Cents"),
-                  ),
-                ),
-              ],
-            )
-          ],
-        ),
-        actions: [
-          // Save button
-          MaterialButton(
-            onPressed: save,
-            child: Text('Save'),
-          ),
-
-          // Cancel buton
-          MaterialButton(
-            onPressed: cancel,
-            child: Text('Cancel'),
-          ),
-        ],
+      builder: (context) => DialogBox(
+        onExpenseNameController: newExpenseNameController,
+        onExpenseDollerController: newExpenseDollerController,
+        onExpenseCentsController: newExpenseCentsController,
+        onSave: save,
+        onCancel: cancel,
       ),
     );
   }
@@ -161,7 +135,3 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
-
-// child: MyBarGraph(
-//             weeklySummary: weeklySummary,
-//           ),
